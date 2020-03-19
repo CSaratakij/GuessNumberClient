@@ -14,6 +14,9 @@ public class GameSessionUI : MonoBehaviour
     GameClient game;
 
     [SerializeField]
+    GameUI ui;
+
+    [SerializeField]
     Text txtChatHistory;
 
     [SerializeField]
@@ -31,9 +34,29 @@ public class GameSessionUI : MonoBehaviour
     [SerializeField]
     TextMeshProUGUI lblTotalPlayer;
 
+    [Header("LeaderBoard")]
+    [SerializeField]
+    RectTransform panelLeaderBoard;
+
+    [SerializeField]
+    GameObject prefabLeaderBoardButton;
+
+    [SerializeField]
+    Button btnClose;
+
+    enum LabelIndex
+    {
+        Rank,
+        Name,
+        TryCount
+    }
+
     void Awake()
     {
         txtChatHistory.text = string.Empty;
+        btnClose.onClick.AddListener(() => {
+            ui.Show(GameUI.View.GameSessionView);
+        });
     }
 
     void Start()
@@ -117,8 +140,30 @@ public class GameSessionUI : MonoBehaviour
         }
     }
 
-    public void UpdateLeaderBoard(List<string> list)
+    public void UpdateLeaderBoard(List<GameClient.Score> list)
     {
-//TODO
-    }
+        for (int i = 0; i < panelLeaderBoard.childCount; ++i)
+        {
+            Destroy(panelLeaderBoard.GetChild(i).gameObject);
+        }
+
+        string rankFormat = "#{0}";
+        string tryCountFormat = "try: {0}";
+
+        for (int i = 0; i < list.Count; ++i)
+        {
+            var score = list[i];
+
+            GameObject obj = Instantiate(prefabLeaderBoardButton, Vector3.zero, Quaternion.identity);
+            obj.transform.SetParent(panelLeaderBoard, false);
+
+            Text lblRank = obj.transform.GetChild((int)LabelIndex.Rank).GetComponent<Text>();
+            Text lblName = obj.transform.GetChild((int)LabelIndex.Name).GetComponent<Text>();
+            Text lblTryCount = obj.transform.GetChild((int)LabelIndex.TryCount).GetComponent<Text>();
+
+            lblRank.text = string.Format(rankFormat, i + 1);
+            lblName.text = score.name;
+            lblTryCount.text = string.Format(tryCountFormat, score.tryCount);
+        }
+    } 
 }

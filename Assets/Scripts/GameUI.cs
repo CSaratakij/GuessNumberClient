@@ -9,7 +9,8 @@ public class GameUI : MonoBehaviour
     {
         ConnectView = 0,
         GameSessionView = 1,
-        InGameView = 2
+        InGameView = 2,
+        LeaderBoardView = 3
     }
 
     [SerializeField]

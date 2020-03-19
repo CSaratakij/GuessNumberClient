@@ -33,11 +33,25 @@ public class GameClient : MonoBehaviour
     public int CurrentScore => score;
 
     public List<string> PlayerList => playerList;
+    public List<Score> LeaderBoardList => leaderBoardList;
 
     int number = 0;
-    int score = int.MaxValue;
+    int score = 99;
 
     List<string> playerList;
+    List<Score> leaderBoardList;
+
+    public struct Score
+    {
+        public string name;
+        public int tryCount;
+
+        public Score(string name, int tryCount)
+        {
+            this.name = name;
+            this.tryCount = tryCount;
+        }
+    }
 
     void Awake()
     {
@@ -61,6 +75,7 @@ public class GameClient : MonoBehaviour
     void Initialize()
     {
         playerList = new List<string>();
+        leaderBoardList = new List<Score>();
     }
 
     void MakeSingleton()
@@ -87,8 +102,9 @@ public class GameClient : MonoBehaviour
             ui.Show(GameUI.View.GameSessionView);
             Debug.Log("Connnected...");
             // RequestPlayersList();
-            RequestAddPlayer(GameClient.PlayerName);
-            RequestCurrentScore(GameClient.PlayerName);
+            TryCreateNewPlayer();
+            // RequestAddPlayer(GameClient.PlayerName);
+            // RequestCurrentScore(GameClient.PlayerName);
         });
 
         socket.On("game.respondJoinedPlayers", (e) => {
@@ -108,22 +124,38 @@ public class GameClient : MonoBehaviour
 
         socket.On("game.respondLeaderBoard", (e) => {
             List<JSONObject> info = e.data["info"].list;
+            leaderBoardList.Clear();
+
             foreach (var obj in info)
             {
-                //TODO
-                Debug.Log(obj);
+                leaderBoardList.Add(new Score(
+                    obj["name"].str,
+                    Convert.ToInt32(obj["tryCount"].n)
+                ));
             }
+
+            gameSessionUI.UpdateLeaderBoard(leaderBoardList);
+            ui.Show(GameUI.View.LeaderBoardView);
+
+            Debug.Log("Show leader board...");
         });
 
         socket.On("game.respondScore", (e) => {
             try
             {
-                score = (int)e.data["tryCount"].n;
-                Debug.Log("Current Score : " + score);
+                if (e.data.HasField("tryCount"))
+                {
+                    score = Mathf.Abs((int)e.data["tryCount"].n);
+                    Debug.Log("Current Score : " + score);
+                }
+                else
+                {
+                    score = 99;
+                }
             }
             catch (Exception ex)
             {
-                score = int.MaxValue;
+                score = 99;
                 Debug.Log("What the fuck happen in score...?");
             }
         });
@@ -202,9 +234,10 @@ public class GameClient : MonoBehaviour
         socket.url = string.Format(webSocketURLFormat, ipInputField.text, portInputField.text);
 
         UpdatePlayerName();
-        gameSessionUI.ResetData();
 
+        gameSessionUI.ResetData();
         socket?.Connect();
+
         // ui.Show(GameUI.View.GameSessionView);
     }
 
@@ -229,6 +262,13 @@ public class GameClient : MonoBehaviour
     public void UpdatePlayerName()
     {
         PlayerName = playerNameField.text;
+    }
+
+    public void TryCreateNewPlayer()
+    {
+        JSONObject jSONObject = new JSONObject(JSONObject.Type.OBJECT);
+        jSONObject.AddField("requestOwner", PlayerName);
+        socket.Emit("game.requestCreatePlayer", jSONObject);
     }
 
     public void UpdateScore(int tryCount)
