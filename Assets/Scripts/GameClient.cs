@@ -9,6 +9,8 @@ using SocketIO;
 [RequireComponent(typeof(SocketIOComponent))]
 public class GameClient : MonoBehaviour
 {
+    const int MAX_SCORE = 1000;
+
     bool IsGameStart = false;
 
     public static SocketIOComponent socket = null;
@@ -36,7 +38,7 @@ public class GameClient : MonoBehaviour
     public List<Score> LeaderBoardList => leaderBoardList;
 
     int number = 0;
-    int score = 99;
+    int score = MAX_SCORE;
 
     List<string> playerList;
     List<Score> leaderBoardList;
@@ -150,12 +152,12 @@ public class GameClient : MonoBehaviour
                 }
                 else
                 {
-                    score = 99;
+                    score = MAX_SCORE;
                 }
             }
             catch (Exception ex)
             {
-                score = 99;
+                score = MAX_SCORE;
                 Debug.Log("What the fuck happen in score...?");
             }
         });
