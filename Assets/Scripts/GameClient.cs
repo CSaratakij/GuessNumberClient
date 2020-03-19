@@ -30,9 +30,13 @@ public class GameClient : MonoBehaviour
     GameSessionUI gameSessionUI;
 
     public int CurrentNumber => number;
+    public int CurrentScore => score;
+
     public List<string> PlayerList => playerList;
 
     int number = 0;
+    int score = int.MaxValue;
+
     List<string> playerList;
 
     void Awake()
@@ -84,6 +88,7 @@ public class GameClient : MonoBehaviour
             Debug.Log("Connnected...");
             // RequestPlayersList();
             RequestAddPlayer(GameClient.PlayerName);
+            RequestCurrentScore(GameClient.PlayerName);
         });
 
         socket.On("game.respondJoinedPlayers", (e) => {
@@ -99,6 +104,28 @@ public class GameClient : MonoBehaviour
             }
 
             gameSessionUI.UpdatePlayerList(playerList);
+        });
+
+        socket.On("game.respondLeaderBoard", (e) => {
+            List<JSONObject> info = e.data["info"].list;
+            foreach (var obj in info)
+            {
+                //TODO
+                Debug.Log(obj);
+            }
+        });
+
+        socket.On("game.respondScore", (e) => {
+            try
+            {
+                score = (int)e.data["tryCount"].n;
+                Debug.Log("Current Score : " + score);
+            }
+            catch (Exception ex)
+            {
+                score = int.MaxValue;
+                Debug.Log("What the fuck happen in score...?");
+            }
         });
 
         socket.On("game.respondToStart", (e) => {
@@ -155,6 +182,13 @@ public class GameClient : MonoBehaviour
         socket?.Emit("game.requestJoinedPlayers");
     }
 
+    public void RequestCurrentScore(string name)
+    {
+        JSONObject jSONObject = new JSONObject(JSONObject.Type.OBJECT);
+        jSONObject.AddField("requestOwner", name);
+        socket?.Emit("game.requestScore", jSONObject);
+    }
+
     void RequestAddPlayer(string name)
     {
         JSONObject jSONObject = new JSONObject(JSONObject.Type.OBJECT);
@@ -182,6 +216,11 @@ public class GameClient : MonoBehaviour
         socket?.Emit("game.requestToStart", jSONObject);
     }
 
+    public void btnLeaderBoard_OnClick()
+    {
+        socket?.Emit("game.requestLeaderBoard");
+    }
+
     public void btnDisconnect_OnClick()
     {
         socket.Close();
@@ -197,8 +236,10 @@ public class GameClient : MonoBehaviour
         string owner = GameClient.PlayerName;
 
         JSONObject jSONObject = new JSONObject(JSONObject.Type.OBJECT);
+
         jSONObject.AddField("requestOwner", owner);
         jSONObject.AddField("tryCount", tryCount);
+        jSONObject.AddField("oldScore", score);
 
         socket.Emit("game.scoreSubmit", jSONObject);
         Debug.Log("send score");

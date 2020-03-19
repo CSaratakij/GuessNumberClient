@@ -131,9 +131,10 @@ public class InGameUI : MonoBehaviour
     IEnumerator OnGameFinish_Callback(float time)
     {
         yield return new WaitForSeconds(time);
-        game.UpdateScore(tryCount);
 
+        game.UpdateScore(tryCount);
         ResetViewData();
+
         ui.Show(GameUI.View.GameSessionView);
     }
 
@@ -149,5 +150,7 @@ public class InGameUI : MonoBehaviour
         lblStatus.text = "guess number~";
         isGameStart = true;
         submitFlag = true;
+
+        game.RequestCurrentScore(GameClient.PlayerName);
     }
 }

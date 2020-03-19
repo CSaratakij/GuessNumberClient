@@ -116,4 +116,9 @@ public class GameSessionUI : MonoBehaviour
             lblPlayer.text = name;
         }
     }
+
+    public void UpdateLeaderBoard(List<string> list)
+    {
+//TODO
+    }
 }
