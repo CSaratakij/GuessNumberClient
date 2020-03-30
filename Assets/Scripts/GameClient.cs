@@ -10,12 +10,14 @@ using SocketIO;
 [RequireComponent(typeof(SocketIOComponent))]
 public class GameClient : MonoBehaviour
 {
+    const int MAX_SCORE = 1000;
+    static readonly string WindowTitleFormat = "{0}:({1})";
+
     #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
     [DllImport("MyX11Plugin.so")]
     public static extern void SetWindowTitle(string name);
     #endif
 
-    const int MAX_SCORE = 1000;
 
     bool IsGameStart = false;
 
@@ -249,7 +251,8 @@ public class GameClient : MonoBehaviour
         #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
         try
         {
-            SetWindowTitle("Guess Number : " + PlayerName);
+            string title = string.Format(WindowTitleFormat, Application.productName, PlayerName);
+            SetWindowTitle(title);
         }
         catch (DllNotFoundException e)
         {
@@ -275,6 +278,17 @@ public class GameClient : MonoBehaviour
 
     public void btnDisconnect_OnClick()
     {
+        #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+        try
+        {
+            SetWindowTitle(Application.productName);
+        }
+        catch (DllNotFoundException e)
+        {
+            Debug.Log(e.ToString());
+        }
+        #endif
+
         socket.Close();
     }
 
