@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +10,11 @@ using SocketIO;
 [RequireComponent(typeof(SocketIOComponent))]
 public class GameClient : MonoBehaviour
 {
+    #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+    [DllImport("MyX11Plugin.so")]
+    public static extern void SetWindowTitle(string name);
+    #endif
+
     const int MAX_SCORE = 1000;
 
     bool IsGameStart = false;
@@ -239,6 +245,17 @@ public class GameClient : MonoBehaviour
 
         gameSessionUI.ResetData();
         socket?.Connect();
+
+        #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+        try
+        {
+            SetWindowTitle("Guess Number : " + PlayerName);
+        }
+        catch (DllNotFoundException e)
+        {
+            Debug.Log(e.ToString());
+        }
+        #endif
 
         // ui.Show(GameUI.View.GameSessionView);
     }
